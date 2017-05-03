@@ -1,4 +1,5 @@
 #include "base64encode.h"
+#include "ipv6_packet.h"
 #include "structs.c"
 #include <arpa/inet.h>
 #include <byteswap.h>
@@ -169,22 +170,20 @@ void dissect_ipv4(const struct sniff_ethernet *ethernet,
 void dissect_ipv6(const struct sniff_ethernet *ethernet,
                   const struct pcap_pkthdr *header,
                   const uint8_t *packet) {
-    const struct sniff_ipv6 *ip = (struct sniff_ipv6 *)(packet + SIZE_ETHERNET_HEADER);
+    const struct ipv6_packet *ip = (struct ipv6_packet *)(packet + SIZE_ETHERNET_HEADER);
     const char *payload;         /* Packet payload */
     const uint32_t size_ip_header = 40; // Note that possible IPv6 extension headers are
                                   // currently considered part of the payload
 
-    uint32_t vtf = bswap_16(ip->vtf);
     char ip_source[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &ip->source, ip_source, sizeof(ip_source));
+    ipv6_inetaddress_to_string(&ip->source, ip_source);
     char ip_destination[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, &ip->destination, ip_destination,
-              sizeof(ip_destination));
+    ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
     char csv_buffer[1500];
-    sprintf(csv_buffer, "%u, %u, %u, %hu, %hhu, %hhu, %s, %s\n",
-            vtf >> 28, (vtf & 0x0FF0000) >> 20,  vtf & 0x000FFFFF,
-            bswap_16(ip->payload_length),
+    sprintf(csv_buffer, "%u,%u,%u,%hu,%hhu,%hhu,%s,%s,\n",
+            ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
+            ipv6_payload_length(ip),
             ip->next_header, ip->hop_limit, ip_source, ip_destination);
     // TODO teach Esper IPv6, and send IPv6 events via socket
     // send(esper_socket, csv_buffer , strlen(csv_buffer), 0);

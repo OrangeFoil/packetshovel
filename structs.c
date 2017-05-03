@@ -30,15 +30,3 @@ struct sniff_ipv4 {
 #define IP_V(ip) (((ip)->vhl) >> 4)
 #define IP_DSCP(ip) (((ip)->tos) >> 2)
 #define IP_ECN(ip) (((ip)->tos) & 0x03)
-
-/* IPv6 header */
-struct sniff_ipv6 {
-    uint32_t vtf;
-    uint16_t payload_length;
-    uint8_t next_header;
-    uint8_t hop_limit;
-    struct in6_addr source, destination;
-};
-#define IP6_V(ip) (((ip)->vtf) >> 28)
-#define IP6_TC(ip) (((((ip)->vtf)) & 0x0FF0000) >> 20)
-#define IP6_FL(ip) (((ip)->vtf) & 0x000FFFFF)
