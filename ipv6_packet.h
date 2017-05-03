@@ -1,3 +1,12 @@
+/*
+struct ipv6_packet matches the layout of the IPv4 header according to RFC 2460.
+
+With the exception of next_header and hop_limit, all values must be accessed by passing the struct to the provided fucntions prefixed with "ipv6_"!
+The two reasons for this are:
+- a header field has a length other than 8, 16 or 32 bits and the true value has to be determined by masking and/or shifting
+- a header field has a length higher than 8 and endianness needs to corrected from big endian (network byte order) to little endian (x86)
+*/
+*/
 #pragma once
 #include <stdint.h>
 #include <arpa/inet.h>

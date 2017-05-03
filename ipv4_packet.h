@@ -1,3 +1,13 @@
+/*
+struct ipv4_packet matches the layout of the IPv4 header according to RFC 791.
+Note that "type_of_service" was redefined in RFC 3168 and RFC 3260 as DSCP and ECN. The functions ipv4_dscp() and ipv4_ecn() return the respective header values in the modern interpretation.
+
+With the exception of time_to_live and protocol, all values must be accessed by passing the struct to the provided fucntions prefixed with "ipv4_"!
+The two reasons for this are:
+- a header field has a length other than 8, 16 or 32 bits and the true value has to be determined by masking and/or shifting
+- a header field has a length higher than 8 and endianness needs to corrected from big endian (network byte order) to little endian (x86)
+*/
+
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
