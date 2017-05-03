@@ -2,6 +2,7 @@
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
 #include "ipv6_packet.h"
+#include "main.h"
 #include <arpa/inet.h>
 #include <byteswap.h>
 #include <pcap.h>
@@ -16,17 +17,6 @@
 
 int esper_socket;
 char errbuf[PCAP_ERRBUF_SIZE];
-
-int connect_esper();
-void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
-                     const uint8_t *packet);
-int start_sniffing(char *dev);
-void dissect_ipv4(const struct ethernet_frame *ethernet,
-                  const struct pcap_pkthdr *header,
-                  const uint8_t *packet);
-void dissect_ipv6(const struct ethernet_frame *ethernet,
-                  const struct pcap_pkthdr *header,
-                  const uint8_t *packet);
 
 
 int main(int argc, char *argv[]) {
