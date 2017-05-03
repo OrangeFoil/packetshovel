@@ -13,7 +13,7 @@ The two reasons for this are:
 #include <arpa/inet.h>
 #include <stdint.h>
 
-    struct ipv6_packet {
+struct ipv6_packet {
     uint32_t vtf;
     uint16_t payload_length;
     uint8_t next_header;
