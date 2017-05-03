@@ -1,8 +1,8 @@
+#include "main.h"
 #include "base64encode.h"
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
 #include "ipv6_packet.h"
-#include "main.h"
 #include <arpa/inet.h>
 #include <byteswap.h>
 #include <pcap.h>
@@ -17,7 +17,6 @@
 
 int esper_socket;
 char errbuf[PCAP_ERRBUF_SIZE];
-
 
 int main(int argc, char *argv[]) {
     if (argc < 3 || argc > 4) {
@@ -110,14 +109,15 @@ void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
     } else if (bswap_16(ethernet->type) == 0x86DD) {
         dissect_ipv6(ethernet, header, packet);
     } else {
-        printf("   * Ignored frame with ethertype 0x%x\n", bswap_16(ethernet->type));
+        printf("   * Ignored frame with ethertype 0x%x\n",
+               bswap_16(ethernet->type));
     }
 }
 
 void dissect_ipv4(const struct ethernet_frame *ethernet,
-                  const struct pcap_pkthdr *header,
-                  const uint8_t *packet) {
-    const struct ipv4_packet *ip = (struct ipv4_packet *)(packet + SIZE_ETHERNET_HEADER);
+                  const struct pcap_pkthdr *header, const uint8_t *packet) {
+    const struct ipv4_packet *ip =
+        (struct ipv4_packet *)(packet + SIZE_ETHERNET_HEADER);
     const uint8_t *payload; /* Packet payload */
     const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
@@ -140,14 +140,15 @@ void dissect_ipv4(const struct ethernet_frame *ethernet,
                  payload_encoded_length);
 
     // create csv string
-    char *const csv_buffer = malloc(sizeof(char) * (200 + payload_encoded_length));
-    sprintf(csv_buffer,
-            "%d,%d,%d,%d,%hu,%hu,%s,%s,%d,%hhu,%hhu,%hu,%s,%s,%s\n",
-            ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip), ipv4_ecn(ip), ipv4_total_length(ip),
-            ipv4_identification(ip), ipv4_dont_fragment(ip) ? "true" : "false",
-            ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip), ip->time_to_live,
-            ip->protocol, bswap_16(ip->checksum), ip_source, ip_destination,
-            payload_encoded);
+    char *const csv_buffer =
+        malloc(sizeof(char) * (200 + payload_encoded_length));
+    sprintf(csv_buffer, "%d,%d,%d,%d,%hu,%hu,%s,%s,%d,%hhu,%hhu,%hu,%s,%s,%s\n",
+            ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip),
+            ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
+            ipv4_dont_fragment(ip) ? "true" : "false",
+            ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip),
+            ip->time_to_live, ip->protocol, bswap_16(ip->checksum), ip_source,
+            ip_destination, payload_encoded);
     // send csv to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
@@ -157,12 +158,13 @@ void dissect_ipv4(const struct ethernet_frame *ethernet,
 }
 
 void dissect_ipv6(const struct ethernet_frame *ethernet,
-                  const struct pcap_pkthdr *header,
-                  const uint8_t *packet) {
-    const struct ipv6_packet *ip = (struct ipv6_packet *)(packet + SIZE_ETHERNET_HEADER);
-    const char *payload;         /* Packet payload */
-    const uint32_t size_ip_header = 40; // Note that possible IPv6 extension headers are
-                                  // currently considered part of the payload
+                  const struct pcap_pkthdr *header, const uint8_t *packet) {
+    const struct ipv6_packet *ip =
+        (struct ipv6_packet *)(packet + SIZE_ETHERNET_HEADER);
+    const char *payload; /* Packet payload */
+    const uint32_t size_ip_header =
+        40; // Note that possible IPv6 extension headers are
+            // currently considered part of the payload
 
     char ip_source[INET6_ADDRSTRLEN];
     ipv6_inetaddress_to_string(&ip->source, ip_source);
@@ -170,10 +172,10 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
     ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
     char csv_buffer[1500];
-    sprintf(csv_buffer, "%u,%u,%u,%hu,%hhu,%hhu,%s,%s,\n",
-            ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
-            ipv6_payload_length(ip),
-            ip->next_header, ip->hop_limit, ip_source, ip_destination);
+    sprintf(csv_buffer, "%u,%u,%u,%hu,%hhu,%hhu,%s,%s,\n", ipv6_version(ip),
+            ipv6_traffic_class(ip), ipv6_flow_label(ip),
+            ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
+            ip_destination);
     // TODO teach Esper IPv6, and send IPv6 events via socket
     // send(esper_socket, csv_buffer , strlen(csv_buffer), 0);
     printf("%s", csv_buffer);

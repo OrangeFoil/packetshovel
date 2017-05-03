@@ -21,14 +21,14 @@ int base64encode(const void *data_buf, size_t dataLength, char *result,
 
         if ((x + 1) < dataLength) {
             n += ((uint32_t)data[x + 1]) << 8; // parenthesis needed, compiler
-}
                                                // depending on flags can do the
                                                // shifting before conversion to
                                                // uint32_t, resulting to 0
+        }
 
         if ((x + 2) < dataLength) {
             n += data[x + 2];
-}
+        }
 
         /* this 24-bit number gets separated into four 6-bit numbers */
         n0 = (uint8_t)(n >> 18) & 63;
@@ -42,11 +42,11 @@ int base64encode(const void *data_buf, size_t dataLength, char *result,
          */
         if (resultIndex >= resultSize) {
             return 1; /* indicate failure: buffer too small */
-}
+        }
         result[resultIndex++] = base64chars[n0];
         if (resultIndex >= resultSize) {
             return 1; /* indicate failure: buffer too small */
-}
+        }
         result[resultIndex++] = base64chars[n1];
 
         /*
@@ -56,7 +56,7 @@ int base64encode(const void *data_buf, size_t dataLength, char *result,
         if ((x + 1) < dataLength) {
             if (resultIndex >= resultSize) {
                 return 1; /* indicate failure: buffer too small */
-}
+            }
             result[resultIndex++] = base64chars[n2];
         }
 
@@ -67,7 +67,7 @@ int base64encode(const void *data_buf, size_t dataLength, char *result,
         if ((x + 2) < dataLength) {
             if (resultIndex >= resultSize) {
                 return 1; /* indicate failure: buffer too small */
-}
+            }
             result[resultIndex++] = base64chars[n3];
         }
     }
@@ -81,13 +81,13 @@ int base64encode(const void *data_buf, size_t dataLength, char *result,
         for (; padCount < 3; padCount++) {
             if (resultIndex >= resultSize) {
                 return 1; /* indicate failure: buffer too small */
-}
+            }
             result[resultIndex++] = '=';
         }
     }
     if (resultIndex >= resultSize) {
         return 1; /* indicate failure: buffer too small */
-}
+    }
     result[resultIndex] = 0;
     return 0; /* indicate success */
 }
