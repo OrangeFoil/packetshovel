@@ -1,4 +1,3 @@
-#pragma once
 #include <arpa/inet.h>
 
 /* Ethernet addresses are 6 bytes */

@@ -1,4 +1,4 @@
-#include "base64encode.c"
+#include "base64encode.h"
 #include "structs.c"
 #include <arpa/inet.h>
 #include <byteswap.h>
