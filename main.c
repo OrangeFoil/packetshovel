@@ -1,6 +1,7 @@
 #include "base64encode.h"
+#include "ethernet_frame.h"
+#include "ipv4_packet.h"
 #include "ipv6_packet.h"
-#include "structs.c"
 #include <arpa/inet.h>
 #include <byteswap.h>
 #include <pcap.h>
@@ -20,12 +21,13 @@ int connect_esper();
 void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
                      const uint8_t *packet);
 int start_sniffing(char *dev);
-void dissect_ipv4(const struct sniff_ethernet *ethernet,
+void dissect_ipv4(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header,
                   const uint8_t *packet);
-void dissect_ipv6(const struct sniff_ethernet *ethernet,
+void dissect_ipv6(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header,
                   const uint8_t *packet);
+
 
 int main(int argc, char *argv[]) {
     if (argc < 3 || argc > 4) {
@@ -110,7 +112,7 @@ int start_sniffing(char *dev) {
 
 void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
                      const uint8_t *packet) {
-    const struct sniff_ethernet *ethernet = (struct sniff_ethernet *)(packet);
+    const struct ethernet_frame *ethernet = (struct ethernet_frame *)(packet);
 
     // analyse network layer
     if (bswap_16(ethernet->type) == 0x0800) {
@@ -122,29 +124,26 @@ void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
     }
 }
 
-void dissect_ipv4(const struct sniff_ethernet *ethernet,
+void dissect_ipv4(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header,
                   const uint8_t *packet) {
-    const struct sniff_ipv4 *ip = (struct sniff_ipv4 *)(packet + SIZE_ETHERNET_HEADER);
+    const struct ipv4_packet *ip = (struct ipv4_packet *)(packet + SIZE_ETHERNET_HEADER);
     const uint8_t *payload; /* Packet payload */
-    const uint32_t size_ip_header = IP_HL(ip) * 4;
+    const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
     if (size_ip_header < 20) {
         printf("   * Invalid IP header length: %u bytes\n", size_ip_header);
         return;
     }
 
-    const uint16_t offset = bswap_16(ip->off);
-
     char ip_source[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &ip->source, ip_source, sizeof(ip_source));
+    ipv4_inetaddress_to_string(&ip->source, ip_source);
     char ip_destination[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &ip->destination, ip_destination,
-              sizeof(ip_destination));
+    ipv4_inetaddress_to_string(&ip->destination, ip_destination);
 
     // encode payload in base64
     payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER + size_ip_header);
-    const uint16_t payload_length = bswap_16(ip->len) - size_ip_header;
+    const uint16_t payload_length = ipv4_total_length(ip) - size_ip_header;
     char *const payload_encoded = malloc(payload_length * 1.6);
     const size_t payload_encoded_length = payload_length * 1.6;
     base64encode(payload, payload_length, payload_encoded,
@@ -154,9 +153,9 @@ void dissect_ipv4(const struct sniff_ethernet *ethernet,
     char *const csv_buffer = malloc(sizeof(char) * (200 + payload_encoded_length));
     sprintf(csv_buffer,
             "%d,%d,%d,%d,%hu,%hu,%s,%s,%d,%hhu,%hhu,%hu,%s,%s,%s\n",
-            IP_V(ip), IP_HL(ip), IP_DSCP(ip), IP_ECN(ip), bswap_16(ip->len),
-            bswap_16(ip->id), offset & IP_DF ? "true" : "false",
-            offset & IP_MF ? "true" : "false", offset & IP_OFFMASK, ip->ttl,
+            ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip), ipv4_ecn(ip), ipv4_total_length(ip),
+            ipv4_identification(ip), ipv4_dont_fragment(ip) ? "true" : "false",
+            ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip), ip->time_to_live,
             ip->protocol, bswap_16(ip->checksum), ip_source, ip_destination,
             payload_encoded);
     // send csv to esper
@@ -167,7 +166,7 @@ void dissect_ipv4(const struct sniff_ethernet *ethernet,
     free(csv_buffer);
 }
 
-void dissect_ipv6(const struct sniff_ethernet *ethernet,
+void dissect_ipv6(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header,
                   const uint8_t *packet) {
     const struct ipv6_packet *ip = (struct ipv6_packet *)(packet + SIZE_ETHERNET_HEADER);

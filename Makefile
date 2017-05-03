@@ -1,5 +1,5 @@
-CC = clang
-OBJS = base64encode.o ipv6_packet.o structs.o
+CC = gcc
+OBJS = base64encode.o ipv4_packet.o ipv6_packet.o
 LIBS = -lpcap
 CFLAGS = -Wall -O2
 
@@ -11,10 +11,10 @@ packetshovel: main.c
 base64encode.o: base64encode.c
 	$(CC) -c $(CFLAGS) $^ -o $@
 
-ipv6_packet.o: ipv6_packet.c
+ipv4_packet.o: ipv4_packet.c
 	$(CC) -c $(CFLAGS) $^ -o $@
 
-structs.o: structs.c
+ipv6_packet.o: ipv6_packet.c
 	$(CC) -c $(CFLAGS) $^ -o $@
 
 clean:
