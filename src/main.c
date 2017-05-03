@@ -179,5 +179,4 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
     // TODO teach Esper IPv6, and send IPv6 events via socket
     // send(esper_socket, csv_buffer , strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
-    printf("0x%x\n", ip->vtf);
 }

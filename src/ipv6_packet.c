@@ -2,15 +2,15 @@
 #include <byteswap.h>
 
 uint32_t ipv6_version(const struct ipv6_packet *ip) {
-    return ip->vtf >> 28;
+    return bswap_32(ip->vtf) >> 28;
 }
 
 uint32_t ipv6_traffic_class(const struct ipv6_packet *ip) {
-    return (ip->vtf & 0x0FF0000) >> 20;
+    return (bswap_32(ip->vtf) & 0x0FF0000) >> 16;
 }
 
 uint32_t ipv6_flow_label(const struct ipv6_packet *ip) {
-    return ip->vtf & 0x000FFFFF;
+    return bswap_32(ip->vtf) & 0x000FFFFF;
 }
 
 uint16_t ipv6_payload_length(const struct ipv6_packet *ip) {
