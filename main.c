@@ -118,39 +118,7 @@ void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
         dissect_ipv6(ethernet, header, packet);
     } else {
         printf("   * Ignored frame with ethertype 0x%x\n", bswap_16(ethernet->type));
-}
-
-    /*// extract TCP header
-    if (ip->protocol == 0x06) {
-        const struct sniff_tcp *tcp;
-
-        tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET_HEADER +
-    size_ip_header);
-        size_segment_header = OFF(tcp)*4;
-        if (size_segment_header < 20) {
-            printf("   * Invalid TCP header length: %u bytes\n",
-    size_segment_header);
-            return;
-        }
-        payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER +
-    size_ip_header + size_segment_header);
-
-        printf("   * TCP packet from %s:%u to %s:%u\n", ip_source, tcp->sport,
-    ip_destination, tcp->dport);
     }
-    // extract UDP header
-    #define SIZE_UDP_HEADER 2
-    if (ip->protocol == 0x11) {
-        const struct sniff_udp *udp;
-
-        udp = (struct sniff_udp*)(packet + SIZE_ETHERNET_HEADER +
-    size_ip_header);
-        payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER +
-    size_ip_header + SIZE_UDP_HEADER);
-
-        printf("   * UDP packet from %s:%u to %s:%u\n", ip_source, udp->sport,
-    ip_destination, udp->dport);
-    }*/
 }
 
 void dissect_ipv4(const struct sniff_ethernet *ethernet,

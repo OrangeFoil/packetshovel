@@ -43,36 +43,3 @@ struct sniff_ipv6 {
 #define IP6_V(ip) (((ip)->vtf) >> 28)
 #define IP6_TC(ip) (((((ip)->vtf)) & 0x0FF0000) >> 20)
 #define IP6_FL(ip) (((ip)->vtf) & 0x000FFFFF)
-
-/* TCP header */
-typedef uint32_t tcp_seq;
-
-struct sniff_tcp {
-    uint16_t sport; /* source port */
-    uint16_t dport; /* destination port */
-    tcp_seq seq;          /* sequence number */
-    tcp_seq ack;          /* acknowledgement number */
-    uint8_t offx2;  /* data offset, rsvd */
-#define OFF(th) (((th)->offx2 & 0xf0) >> 4)
-    uint8_t tlags;
-#define IN 0x01
-#define SYN 0x02
-#define RST 0x04
-#define PUSH 0x08
-#define ACK 0x10
-#define URG 0x20
-#define ECE 0x40
-#define CWR 0x80
-#define FLAGS (FIN | SYN | RST | ACK | URG | ECE | CWR)
-    uint16_t win; /* window */
-    uint16_t sum; /* checksum */
-    uint16_t urp; /* urgent pointer */
-};
-
-/* UDP HEADER */
-struct sniff_udp {
-    uint16_t sport;
-    uint16_t dport;
-    uint16_t length;
-    uint16_t checksum;
-};
