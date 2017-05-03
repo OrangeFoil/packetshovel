@@ -1,14 +1,16 @@
 CC = gcc
-OBJS = base64encode.o ipv4_packet.o ipv6_packet.o main.o
+BIN = ./bin
+SRC = ./src
+OBJS = $(BIN)/base64encode.o $(BIN)/ipv4_packet.o $(BIN)/ipv6_packet.o $(BIN)/main.o
 LIBS = -lpcap
 CFLAGS = -Wall -O2
 
 all: $(OBJS) packetshovel
 
 packetshovel: $(OBJS)
-	$(CC) $(CFLAGS) $(LIBS) $^ -o $@
+	$(CC) $(CFLAGS) $(LIBS) $^ -o $(BIN)/$@
 
-%.o: %.c
+$(BIN)/%.o: $(SRC)/%.c
 	$(CC) -c $(CFLAGS) $^ -o $@
 
 clean:
