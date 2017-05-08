@@ -3,14 +3,18 @@
  * \author  Marcus Legendre
  * \brief   Provides a struct and various functions to interpret IPv4 headers
  *
- * \details struct ipv4_packet matches the layout of the IPv4 header according to RFC 791.\n
- * Note that "type_of_service" was redefined in RFC 3168 and RFC 3260 as DSCP and
+ * \details struct ipv4_packet matches the layout of the IPv4 header according
+ * to RFC 791.\n
+ * Note that "type_of_service" was redefined in RFC 3168 and RFC 3260 as DSCP
+ * and
  * ECN. The functions ipv4_dscp() and ipv4_ecn() return the respective header
  * values in the modern interpretation.\n
- * With the exception of time_to_live and protocol, all values must be accessed by
+ * With the exception of time_to_live and protocol, all values must be accessed
+ * by
  * passing the struct to the provided fucntions prefixed with "ipv4_"!
  * The two reasons for this are:\n
- * - a header field has a length other than 8, 16 or 32 bits and the true value has
+ * - a header field has a length other than 8, 16 or 32 bits and the true value
+ * has
  *   to be determined by masking and/or shifting
  * - a header field has a length higher than 8 and endianness needs to corrected
  *   from big endian (network byte order) to little endian (x86)
@@ -33,7 +37,8 @@ struct ipv4_packet {
      */
     uint8_t vhl;
     /**
-     * \brief Former Type of Service field. Redefined to ECN and DSCP in RFC 3168 and RFC 3260.
+     * \brief Former Type of Service field. Redefined to ECN and DSCP in RFC
+     * 3168 and RFC 3260.
      *
      * \see ipv4_dscp(const struct ipv4_packet *ip)
      * \see ipv4_ecn(const struct ipv4_packet *ip)
@@ -138,9 +143,11 @@ bool ipv4_more_fragments(const struct ipv4_packet *ip);
 uint16_t ipv4_checksum(const struct ipv4_packet *ip);
 
 /**
- * \brief Converts an IP from its binary representation to a more easily readable string
+ * \brief Converts an IP from its binary representation to a more easily
+ * readable string
  *
  * \param address   Pointer to a struct in_addr that should be converted.
- * \param buffer    Pointer to a string buffer the string should be written to. Make sure the buffer is big enough!
+ * \param buffer    Pointer to a string buffer the string should be written to.
+ * Make sure the buffer is big enough!
  */
 void ipv4_inetaddress_to_string(const struct in_addr *address, char *buffer);

@@ -6,7 +6,7 @@
 char errbuf[PCAP_ERRBUF_SIZE];
 
 void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
-                     const uint8_t *packet);
+                      const uint8_t *packet);
 void sniffer_start(char *dev);
 void dissect_ipv4(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header, const uint8_t *packet);

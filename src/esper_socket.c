@@ -1,8 +1,8 @@
 #include "esper_socket.h"
 #include <arpa/inet.h>
-#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 int esper_socket;
@@ -24,7 +24,7 @@ int esper_connect(char *ip, int port) {
     // Connect to remote server
     if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0) {
         printf("Connection to EsperCEP failed\n");
-        exit(-1);
+        exit(EXIT_FAILURE);
         return 1;
     }
 

@@ -1,15 +1,15 @@
+#include "sniffer.h"
 #include "base64encode.h"
 #include "esper_socket.h"
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
 #include "ipv6_packet.h"
-#include "sniffer.h"
 #include <byteswap.h>
 #include <pcap.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define SIZE_ETHERNET_HEADER 14
 
@@ -49,7 +49,7 @@ void sniffer_start(char *dev) {
 }
 
 void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
-                     const uint8_t *packet) {
+                      const uint8_t *packet) {
     const struct ethernet_frame *ethernet = (struct ethernet_frame *)(packet);
 
     // analyse network layer
