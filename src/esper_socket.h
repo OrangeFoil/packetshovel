@@ -2,4 +2,5 @@
 
 int esper_socket;
 
-int connect_esper(char *ip, int port);
+int esper_connect(char *ip, int port);
+void esper_disconnect();

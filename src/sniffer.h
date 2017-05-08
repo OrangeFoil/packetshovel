@@ -1,11 +1,13 @@
 #pragma once
 #include "ethernet_frame.h"
 #include <pcap.h>
+#include <stdint.h>
 
-int connect_esper();
-void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
+char errbuf[PCAP_ERRBUF_SIZE];
+
+void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
                      const uint8_t *packet);
-void start_sniffing(char *dev);
+void sniffer_start(char *dev);
 void dissect_ipv4(const struct ethernet_frame *ethernet,
                   const struct pcap_pkthdr *header, const uint8_t *packet);
 void dissect_ipv6(const struct ethernet_frame *ethernet,

@@ -66,9 +66,10 @@ uint8_t ipv4_version(const struct ipv4_packet *ip);
 
 /**
  * \brief Applies the a mask to get the header length field
+ * \note This value needs to be multiplied by 4 to get the real header length.
  *
  * \param ip  Pointer to struct ipv4_packet
- * \return    Exact header length value as transmitted. Note that this value needs to be multiplied by 4 to get the real header length.
+ * \return    Exact header length value as transmitted.
  */
 uint8_t ipv4_header_length(const struct ipv4_packet *ip);
 

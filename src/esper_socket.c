@@ -3,10 +3,11 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int esper_socket;
 
-int connect_esper(char *ip, int port) {
+int esper_connect(char *ip, int port) {
     int socket_desc;
     struct sockaddr_in server;
 
@@ -29,4 +30,8 @@ int connect_esper(char *ip, int port) {
 
     printf("Connected to EsperCEP (%s:%i)\n", ip, port);
     return socket_desc;
+}
+
+void esper_disconnect() {
+    close(esper_socket);
 }
