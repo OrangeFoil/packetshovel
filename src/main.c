@@ -1,5 +1,6 @@
 #include "main.h"
 #include "base64encode.h"
+#include "esper_socket.h"
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
 #include "ipv6_packet.h"
@@ -10,12 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
 #define SIZE_ETHERNET_HEADER 14
 
-int esper_socket;
 char errbuf[PCAP_ERRBUF_SIZE];
 
 int main(int argc, char *argv[]) {
@@ -46,31 +44,6 @@ int main(int argc, char *argv[]) {
     // disconnect EsperCEP
     close(esper_socket);
     return sniffer_return;
-}
-
-int connect_esper(char *ip, int port) {
-    int socket_desc;
-    struct sockaddr_in server;
-
-    // Create socket
-    socket_desc = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_desc == -1) {
-        printf("Unable to create socket\n");
-    }
-
-    server.sin_addr.s_addr = inet_addr(ip);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-
-    // Connect to remote server
-    if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        printf("Connection to EsperCEP failed\n");
-        exit(-1);
-        return 1;
-    }
-
-    printf("Connected to EsperCEP (%s:%i)\n", ip, port);
-    return socket_desc;
 }
 
 int start_sniffing(char *dev) {

@@ -1,7 +1,7 @@
 CC = gcc
 BIN = ./bin
 SRC = ./src
-OBJS = $(BIN)/base64encode.o $(BIN)/ipv4_packet.o $(BIN)/ipv6_packet.o $(BIN)/main.o
+OBJS = $(BIN)/base64encode.o $(BIN)/esper_socket.o $(BIN)/ipv4_packet.o $(BIN)/ipv6_packet.o $(BIN)/main.o
 LIBS = -lpcap
 CFLAGS = -Wall -O2
 
