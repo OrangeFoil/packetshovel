@@ -28,32 +28,34 @@ int main(int argc, char *argv[]) {
     esper_socket = connect_esper(argv[1], port);
 
     // sniffing
-    char *dev;
-    if (argc != 4) {
+    char *dev = NULL;
+    if (argc == 4) {
+        dev = argv[3];
+    }
+    start_sniffing(dev);
+
+    // disconnect EsperCEP
+    close(esper_socket);
+    return 0;
+}
+
+void start_sniffing(char *dev) {
+    pcap_t *handle;
+
+    if (dev == NULL) {
         // find default device
         dev = pcap_lookupdev(errbuf);
         if (dev == NULL) {
             fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-            return 2;
+            exit(EXIT_FAILURE);
         }
-    } else {
-        dev = argv[3];
     }
-    int sniffer_return = start_sniffing(dev);
-
-    // disconnect EsperCEP
-    close(esper_socket);
-    return sniffer_return;
-}
-
-int start_sniffing(char *dev) {
-    pcap_t *handle;
 
     // open device
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if (handle == NULL) {
         fprintf(stderr, "Couldn't open capture device %s: %s\n", dev, errbuf);
-        return 2;
+        exit(EXIT_FAILURE);
     }
 
     // determine the type of link-layer headers
@@ -61,15 +63,15 @@ int start_sniffing(char *dev) {
         fprintf(stderr, "Capture device %s doesn't provide Ethernet headers - "
                         "not supported\n",
                 dev);
-        return 2;
+        exit(EXIT_FAILURE);
     }
 
     // the actual sniffing
+    printf("Sniffing on device %s\n", dev);
     pcap_loop(handle, -1, packet_callback, NULL);
 
     // stop sniffing and close connection to EsperCEP
     pcap_close(handle);
-    return 0;
 }
 
 void packet_callback(uint8_t *args, const struct pcap_pkthdr *header,
