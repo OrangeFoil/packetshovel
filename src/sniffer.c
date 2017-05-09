@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SIZE_ETHERNET_HEADER 14
-
 void sniffer_start(char *dev) {
     pcap_t *handle;
 
@@ -52,21 +50,35 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
                       const uint8_t *packet) {
     const struct ethernet_frame *ethernet = (struct ethernet_frame *)(packet);
 
+    // defaults for ethernet frame without VLAN tag
+    uint32_t size_ethernet_header = 14;
+    uint16_t ethertype = bswap_16(ethernet->type);
+    uint16_t vlan_id = 0x000;
+
+    // adjustments for ethernet frames with VLAN tag
+    if (ethertype == 0x8100) {
+        size_ethernet_header = 18;
+        const struct ethernet_frame_tagged *ethernet_tagged = (struct ethernet_frame_tagged *)(packet);
+        ethertype = ethernet_tagged->type;
+        vlan_id = ethernet_vlan_identifier(ethernet_tagged);
+        printf("   * VLAN tagged ethernet frame discovered (ID: %hhu)\n", vlan_id); // DELETE ME
+    }
+
     // analyse network layer
-    if (bswap_16(ethernet->type) == 0x0800) {
-        dissect_ipv4(ethernet, header, packet);
-    } else if (bswap_16(ethernet->type) == 0x86DD) {
-        dissect_ipv6(ethernet, header, packet);
+    if (ethertype == 0x0800) {
+        dissect_ipv4(size_ethernet_header, header, packet);
+    } else if (ethertype == 0x86DD) {
+        dissect_ipv6(size_ethernet_header, header, packet);
     } else {
         printf("   * Ignored frame with ethertype 0x%x\n",
                bswap_16(ethernet->type));
     }
 }
 
-void dissect_ipv4(const struct ethernet_frame *ethernet,
+void dissect_ipv4(const uint32_t size_ethernet_header,
                   const struct pcap_pkthdr *header, const uint8_t *packet) {
     const struct ipv4_packet *ip =
-        (struct ipv4_packet *)(packet + SIZE_ETHERNET_HEADER);
+        (struct ipv4_packet *)(packet + size_ethernet_header);
     const uint8_t *payload; /* Packet payload */
     const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
@@ -81,7 +93,7 @@ void dissect_ipv4(const struct ethernet_frame *ethernet,
     ipv4_inetaddress_to_string(&ip->destination, ip_destination);
 
     // encode payload in base64
-    payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER + size_ip_header);
+    payload = (uint8_t *)(packet + size_ethernet_header + size_ip_header);
     const uint16_t payload_length = ipv4_total_length(ip) - size_ip_header;
     char *const payload_encoded = malloc(payload_length * 1.6);
     const size_t payload_encoded_length = payload_length * 1.6;
@@ -110,10 +122,10 @@ void dissect_ipv4(const struct ethernet_frame *ethernet,
     free(csv_buffer);
 }
 
-void dissect_ipv6(const struct ethernet_frame *ethernet,
+void dissect_ipv6(const uint32_t size_ethernet_header,
                   const struct pcap_pkthdr *header, const uint8_t *packet) {
     const struct ipv6_packet *ip =
-        (struct ipv6_packet *)(packet + SIZE_ETHERNET_HEADER);
+        (struct ipv6_packet *)(packet + size_ethernet_header);
     const char *payload; /* Packet payload */
     const uint32_t size_ip_header =
         40; // Note that possible IPv6 extension headers are
@@ -125,7 +137,7 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
     ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
     // encode payload in base64
-    payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER + size_ip_header);
+    payload = (uint8_t *)(packet + size_ethernet_header + size_ip_header);
     const uint16_t payload_length = ipv6_payload_length(ip);
     char *const payload_encoded = malloc(payload_length * 1.6);
     const size_t payload_encoded_length = payload_length * 1.6;
