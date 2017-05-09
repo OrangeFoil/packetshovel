@@ -124,13 +124,26 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
     char ip_destination[INET6_ADDRSTRLEN];
     ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
-    char csv_buffer[1500];
-    sprintf(csv_buffer, "stream=IPv4Packet,version=%u,trafficClass=%u,"
+    // encode payload in base64
+    payload = (uint8_t *)(packet + SIZE_ETHERNET_HEADER + size_ip_header);
+    const uint16_t payload_length = ipv6_payload_length(ip);
+    char *const payload_encoded = malloc(payload_length * 1.6);
+    const size_t payload_encoded_length = payload_length * 1.6;
+    base64encode(payload, payload_length, payload_encoded,
+                 payload_encoded_length);
+
+    char *const csv_buffer =
+        malloc(sizeof(char) * (512 + payload_encoded_length));
+    sprintf(csv_buffer, "stream=IPv6Packet,version=%u,trafficClass=%u,"
                         "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
-                        "hopLimit%hhu,sourceIP=%s,destinationIP=%s,\n",
+                        "hopLimit%hhu,sourceIP=%s,destinationIP=%s,%s\n",
             ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
             ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
-            ip_destination);
+            ip_destination, payload_encoded);
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
+
+    // free up ressouces
+    free(payload_encoded);
+    free(csv_buffer);
 }
