@@ -90,8 +90,12 @@ void dissect_ipv4(const struct ethernet_frame *ethernet,
 
     // create csv string
     char *const csv_buffer =
-        malloc(sizeof(char) * (200 + payload_encoded_length));
-    sprintf(csv_buffer, "%d,%d,%d,%d,%hu,%hu,%s,%s,%d,%hhu,%hhu,%hu,%s,%s,%s\n",
+        malloc(sizeof(char) * (512 + payload_encoded_length));
+    sprintf(csv_buffer, "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
+                        "totalLength=%hu,identification=%hu,dontFragment=%s,"
+                        "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
+                        "protocol=%hhu,headerChecksum=%hu,sourceIP=%s,"
+                        "destinationIP=%s,payload=%s\n",
             ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip),
             ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
             ipv4_dont_fragment(ip) ? "true" : "false",
@@ -121,11 +125,12 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
     ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
     char csv_buffer[1500];
-    sprintf(csv_buffer, "%u,%u,%u,%hu,%hhu,%hhu,%s,%s,\n", ipv6_version(ip),
-            ipv6_traffic_class(ip), ipv6_flow_label(ip),
+    sprintf(csv_buffer, "stream=IPv4Packet,version=%u,trafficClass=%u,"
+                        "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
+                        "hopLimit%hhu,sourceIP=%s,destinationIP=%s,\n",
+            ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
             ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
             ip_destination);
-    // TODO teach Esper IPv6, and send IPv6 events via socket
-    // send(esper_socket, csv_buffer , strlen(csv_buffer), 0);
+    send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
 }
