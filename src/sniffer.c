@@ -136,7 +136,7 @@ void dissect_ipv6(const struct ethernet_frame *ethernet,
         malloc(sizeof(char) * (512 + payload_encoded_length));
     sprintf(csv_buffer, "stream=IPv6Packet,version=%u,trafficClass=%u,"
                         "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
-                        "hopLimit%hhu,sourceIP=%s,destinationIP=%s,%s\n",
+                        "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,%s\n",
             ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
             ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
             ip_destination, payload_encoded);
