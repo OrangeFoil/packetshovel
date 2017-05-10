@@ -58,28 +58,28 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
     // adjustments for ethernet frames with VLAN tag
     if (ethertype == 0x8100) {
         size_ethernet_header = 18;
-        const struct ethernet_frame_tagged *ethernet_tagged = (struct ethernet_frame_tagged *)(packet);
-        ethertype = ethernet_tagged->type;
+        const struct ethernet_frame_tagged *ethernet_tagged =
+            (struct ethernet_frame_tagged *)(packet);
+        ethertype = bswap_16(ethernet_tagged->type);
         vlan_id = ethernet_vlan_identifier(ethernet_tagged);
-        printf("   * VLAN tagged ethernet frame discovered (ID: %hhu)\n", vlan_id); // DELETE ME
     }
 
     // analyse network layer
     if (ethertype == 0x0800) {
-        dissect_ipv4(size_ethernet_header, header, packet);
+        dissect_ipv4(size_ethernet_header, header, packet, &vlan_id);
     } else if (ethertype == 0x86DD) {
-        dissect_ipv6(size_ethernet_header, header, packet);
+        dissect_ipv6(size_ethernet_header, header, packet, &vlan_id);
     } else {
-        printf("   * Ignored frame with ethertype 0x%x\n",
-               bswap_16(ethernet->type));
+        printf("   * Ignored frame with ethertype 0x%x\n", ethertype);
     }
 }
 
 void dissect_ipv4(const uint32_t size_ethernet_header,
-                  const struct pcap_pkthdr *header, const uint8_t *packet) {
+                  const struct pcap_pkthdr *header, const uint8_t *packet,
+                  const uint16_t *vlan_id) {
     const struct ipv4_packet *ip =
         (struct ipv4_packet *)(packet + size_ethernet_header);
-    const uint8_t *payload; /* Packet payload */
+    const uint8_t *payload;
     const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
     if (size_ip_header < 20) {
@@ -107,13 +107,13 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
                         "totalLength=%hu,identification=%hu,dontFragment=%s,"
                         "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
                         "protocol=%hhu,headerChecksum=%hu,sourceIP=%s,"
-                        "destinationIP=%s,payload=%s\n",
+                        "destinationIP=%s,payload=%s,vlanID=%hu\n",
             ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip),
             ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
             ipv4_dont_fragment(ip) ? "true" : "false",
             ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip),
             ip->time_to_live, ip->protocol, bswap_16(ip->checksum), ip_source,
-            ip_destination, payload_encoded);
+            ip_destination, payload_encoded, *vlan_id);
     // send csv to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
@@ -123,10 +123,11 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
 }
 
 void dissect_ipv6(const uint32_t size_ethernet_header,
-                  const struct pcap_pkthdr *header, const uint8_t *packet) {
+                  const struct pcap_pkthdr *header, const uint8_t *packet,
+                  const uint16_t *vlan_id) {
     const struct ipv6_packet *ip =
         (struct ipv6_packet *)(packet + size_ethernet_header);
-    const char *payload; /* Packet payload */
+    const char *payload;
     const uint32_t size_ip_header =
         40; // Note that possible IPv6 extension headers are
             // currently considered part of the payload
@@ -146,12 +147,14 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
 
     char *const csv_buffer =
         malloc(sizeof(char) * (512 + payload_encoded_length));
-    sprintf(csv_buffer, "stream=IPv6Packet,version=%u,trafficClass=%u,"
-                        "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
-                        "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,%s\n",
-            ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
-            ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
-            ip_destination, payload_encoded);
+    sprintf(
+        csv_buffer,
+        "stream=IPv6Packet,version=%u,trafficClass=%u,"
+        "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
+        "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=%s,vlanID=%hu\n",
+        ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
+        ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
+        ip_destination, payload_encoded, *vlan_id);
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     printf("%s", csv_buffer);
 
