@@ -4,7 +4,7 @@
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
 #include "ipv6_packet.h"
-#include <byteswap.h>
+#include <netinet/in.h>
 #include <pcap.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -52,7 +52,7 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
 
     // defaults for ethernet frame without VLAN tag
     uint32_t size_ethernet_header = 14;
-    uint16_t ethertype = bswap_16(ethernet->type);
+    uint16_t ethertype = ntohs(ethernet->type);
     uint16_t vlan_id = 0x000;
 
     // adjustments for ethernet frames with VLAN tag
@@ -60,7 +60,7 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
         size_ethernet_header = 18;
         const struct ethernet_frame_tagged *ethernet_tagged =
             (struct ethernet_frame_tagged *)(packet);
-        ethertype = bswap_16(ethernet_tagged->type);
+        ethertype = ntohs(ethernet_tagged->type);
         vlan_id = ethernet_vlan_identifier(ethernet_tagged);
     }
 
@@ -112,7 +112,7 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
             ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
             ipv4_dont_fragment(ip) ? "true" : "false",
             ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip),
-            ip->time_to_live, ip->protocol, bswap_16(ip->checksum), ip_source,
+            ip->time_to_live, ip->protocol, ntohs(ip->checksum), ip_source,
             ip_destination, payload_encoded, *vlan_id);
     // send csv to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
