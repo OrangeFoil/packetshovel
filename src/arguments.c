@@ -40,16 +40,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     case 'i':
         arguments->interface = arg;
         break;
-    case ARGP_KEY_ARGS:
-        if (state->argc < 3 || state->argc > 4)
-            argp_usage(state); // invalid number of arguments
-        arguments->ip_address = state->argv[1];
-        arguments->port = atoi(state->argv[2]);
-        if (state->argc == 4)
-            arguments->interface = state->argv[3];
+    case ARGP_KEY_ARG:
+        if (state->arg_num >= 3)
+            argp_usage(state); // too many arguments
+        if (state->arg_num == 0)
+            arguments->ip_address = arg;
+        if (state->arg_num == 1)
+            arguments->port = atoi(arg);
+        if (state->arg_num == 2)
+            arguments->interface = arg;
         break;
     case ARGP_KEY_END:
-        if (state->argc < 3)
+        if (state->arg_num < 2)
             argp_usage(state); // not enough arguments
         break;
     default:
