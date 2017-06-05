@@ -1,23 +1,21 @@
+#include "argument_parser.h"
 #include "esper_socket.h"
 #include "sniffer.h"
 
 int main(int argc, char *argv[]) {
-    if (argc < 3 || argc > 4) {
-        printf("Syntax is: %s <IP-Address> <Port> [Interface]\n", argv[0]);
-        return -1;
-    }
+    // default values and argument parsing
+    struct arguments arguments;
+    arguments.silent = 0;
+    arguments.verbose = 0;
+    arguments.interface =
+        NULL; // libpcap will try to auto-detect the default interface
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
     // connect to EsperCEP
-    int port;
-    sscanf(argv[2], "%d", &port);
-    esper_socket = esper_connect(argv[1], port);
+    esper_socket = esper_connect(arguments.ip_address, arguments.port);
 
     // sniffing
-    char *dev = NULL;
-    if (argc == 4) {
-        dev = argv[3];
-    }
-    sniffer_start(dev);
+    sniffer_start(arguments.interface);
 
     // disconnect EsperCEP
     esper_disconnect();
