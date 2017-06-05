@@ -1,4 +1,10 @@
-#include "argument_parser.h"
+/**
+ * \file    arguments.h
+ * \author  Marcus Legendre
+ * \brief   Parses the arguments passed from the command line
+ */
+
+#include "arguments.h"
 #include <argp.h>
 #include <stdlib.h>
 

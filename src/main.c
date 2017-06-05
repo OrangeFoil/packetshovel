@@ -1,10 +1,9 @@
-#include "argument_parser.h"
+#include "arguments.h"
 #include "esper_socket.h"
 #include "sniffer.h"
 
 int main(int argc, char *argv[]) {
     // default values and argument parsing
-    struct arguments arguments;
     arguments.silent = 0;
     arguments.verbose = 0;
     arguments.interface =
