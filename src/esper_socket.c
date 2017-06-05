@@ -1,4 +1,5 @@
 #include "esper_socket.h"
+#include "arguments.h"
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,8 @@ int esper_connect(char *ip, int port) {
     // Create socket
     socket_desc = socket(AF_INET, SOCK_STREAM, 0);
     if (socket_desc == -1) {
-        printf("Unable to create socket\n");
+        if (!arguments.silent)
+            printf("Unable to create socket\n");
     }
 
     server.sin_addr.s_addr = inet_addr(ip);
@@ -23,12 +25,14 @@ int esper_connect(char *ip, int port) {
 
     // Connect to remote server
     if (connect(socket_desc, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        printf("Connection to EsperCEP failed\n");
+        if (!arguments.silent)
+            printf("Connection to EsperCEP failed\n");
         exit(EXIT_FAILURE);
         return 1;
     }
 
-    printf("Connected to EsperCEP (%s:%i)\n", ip, port);
+    if (!arguments.silent)
+        printf("Connected to EsperCEP (%s:%i)\n", ip, port);
     return socket_desc;
 }
 

@@ -1,4 +1,5 @@
 #include "sniffer.h"
+#include "arguments.h"
 #include "base64encode.h"
 #include "esper_socket.h"
 #include "ethernet_frame.h"
@@ -18,7 +19,8 @@ void sniffer_start(char *dev) {
         // find default device
         dev = pcap_lookupdev(errbuf);
         if (dev == NULL) {
-            fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
+            if (!arguments.silent)
+                fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
             exit(EXIT_FAILURE);
         }
     }
@@ -26,20 +28,24 @@ void sniffer_start(char *dev) {
     // open device
     handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
     if (handle == NULL) {
-        fprintf(stderr, "Couldn't open capture device %s: %s\n", dev, errbuf);
+        if (!arguments.silent)
+            fprintf(stderr, "Couldn't open capture device %s: %s\n", dev,
+                    errbuf);
         exit(EXIT_FAILURE);
     }
 
     // determine the type of link-layer headers
     if (pcap_datalink(handle) != DLT_EN10MB) {
-        fprintf(stderr, "Capture device %s doesn't provide Ethernet headers - "
-                        "not supported\n",
-                dev);
+        if (!arguments.silent)
+            fprintf(stderr, "Capture device %s doesn't provide Ethernet "
+                            "headers - not supported\n",
+                    dev);
         exit(EXIT_FAILURE);
     }
 
     // the actual sniffing
-    printf("Sniffing on device %s\n", dev);
+    if (!arguments.silent)
+        printf("Sniffing on device %s\n", dev);
     pcap_loop(handle, -1, sniffer_callback, NULL);
 
     // stop sniffing and close connection to EsperCEP
@@ -70,7 +76,8 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
     } else if (ethertype == 0x86DD) {
         dissect_ipv6(size_ethernet_header, header, packet, &vlan_id);
     } else {
-        printf("   * Ignored frame with ethertype 0x%x\n", ethertype);
+        if (!arguments.silent)
+            printf("   * Ignored frame with ethertype 0x%x\n", ethertype);
     }
 }
 
@@ -83,7 +90,8 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
     const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
     if (size_ip_header < 20) {
-        printf("   * Invalid IP header length: %u bytes\n", size_ip_header);
+        if (!arguments.silent)
+            printf("   * Invalid IP header length: %u bytes\n", size_ip_header);
         return;
     }
 
@@ -116,7 +124,8 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
             ip_destination, payload_encoded, *vlan_id);
     // send csv to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
-    printf("%s", csv_buffer);
+    if (arguments.verbose)
+        printf("%s", csv_buffer);
     // free up ressouces
     free(payload_encoded);
     free(csv_buffer);
@@ -156,7 +165,8 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
         ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
         ip_destination, payload_encoded, *vlan_id);
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
-    printf("%s", csv_buffer);
+    if (arguments.verbose)
+        printf("%s", csv_buffer);
 
     // free up ressouces
     free(payload_encoded);
