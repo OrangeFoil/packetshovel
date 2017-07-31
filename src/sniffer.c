@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char csv_buffer[4096];
+
 void sniffer_start(char *dev) {
     pcap_t *handle;
 
@@ -109,8 +111,6 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
                  payload_encoded_length);
 
     // create csv string
-    char *const csv_buffer =
-        malloc(sizeof(char) * (512 + payload_encoded_length));
     sprintf(csv_buffer, "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
                         "totalLength=%hu,identification=%hu,dontFragment=%s,"
                         "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
@@ -128,7 +128,6 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
         printf("%s", csv_buffer);
     // free up ressouces
     free(payload_encoded);
-    free(csv_buffer);
 }
 
 void dissect_ipv6(const uint32_t size_ethernet_header,
