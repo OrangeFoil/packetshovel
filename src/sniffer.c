@@ -71,7 +71,7 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
         ethertype = ntohs(ethernet_tagged->type);
         vlan_id = ethernet_vlan_identifier(ethernet_tagged);
     }
-    sprintf(csv_buffer, "vlanID=%hu,", vlan_id);
+    sprintf(csv_buffer, "time=%ld.%06ld,vlanID=%hu,", header->ts.tv_sec, header->ts.tv_usec, vlan_id);
 
     // analyse network layer
     if (ethertype == 0x0800) {
