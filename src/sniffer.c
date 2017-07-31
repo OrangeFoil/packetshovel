@@ -88,7 +88,6 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
                   const struct pcap_pkthdr *header, const uint8_t *packet) {
     const struct ipv4_packet *ip =
         (struct ipv4_packet *)(packet + size_ethernet_header);
-    const uint8_t *payload;
     const uint32_t size_ip_header = ipv4_header_length(ip) * 4;
 
     if (size_ip_header < 20) {
@@ -102,40 +101,40 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
     char ip_destination[INET_ADDRSTRLEN];
     ipv4_inetaddress_to_string(&ip->destination, ip_destination);
 
-    // encode payload in base64
-    payload = (uint8_t *)(packet + size_ethernet_header + size_ip_header);
-    const uint16_t payload_length = ipv4_total_length(ip) - size_ip_header;
-    char *const payload_encoded = malloc(payload_length * 1.6);
-    const size_t payload_encoded_length = payload_length * 1.6;
-    base64encode(payload, payload_length, payload_encoded,
-                 payload_encoded_length);
-
-    // append to csv string
+    // append IPv4 header to csv_buffer
     sprintf(csv_buffer + strlen(csv_buffer),
             "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
             "totalLength=%hu,identification=%hu,dontFragment=%s,"
             "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
             "protocol=%hhu,headerChecksum=%hu,sourceIP=%s,"
-            "destinationIP=%s,payload=%s\n",
+            "destinationIP=%s,payload=",
             ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip),
             ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
             ipv4_dont_fragment(ip) ? "true" : "false",
             ipv4_more_fragments(ip) ? "true" : "false", ipv4_offset(ip),
             ip->time_to_live, ip->protocol, ntohs(ip->checksum), ip_source,
-            ip_destination, payload_encoded);
-    // send csv to esper
+            ip_destination);
+
+    // encode payload in base64 and append to csv_buffer
+    const uint8_t *payload =
+        (uint8_t *)(packet + size_ethernet_header + size_ip_header);
+    const uint16_t payload_length = ipv4_total_length(ip) - size_ip_header;
+    int csv_length = strlen(csv_buffer);
+    base64encode(payload, payload_length, csv_buffer + csv_length,
+                 4096 - csv_length);
+
+    // send csv_buffer to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
+    send(esper_socket, "\n", 1, 0);
+    // print to console if --verbose argument is set
     if (arguments.verbose)
-        printf("%s", csv_buffer);
-    // free up ressouces
-    free(payload_encoded);
+        printf("%s\n", csv_buffer);
 }
 
 void dissect_ipv6(const uint32_t size_ethernet_header,
                   const struct pcap_pkthdr *header, const uint8_t *packet) {
     const struct ipv6_packet *ip =
         (struct ipv6_packet *)(packet + size_ethernet_header);
-    const char *payload;
     const uint32_t size_ip_header =
         40; // Note that possible IPv6 extension headers are
             // currently considered part of the payload
@@ -145,26 +144,27 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
     char ip_destination[INET6_ADDRSTRLEN];
     ipv6_inetaddress_to_string(&ip->destination, ip_destination);
 
-    // encode payload in base64
-    payload = (uint8_t *)(packet + size_ethernet_header + size_ip_header);
-    const uint16_t payload_length = ipv6_payload_length(ip);
-    char *const payload_encoded = malloc(payload_length * 1.6);
-    const size_t payload_encoded_length = payload_length * 1.6;
-    base64encode(payload, payload_length, payload_encoded,
-                 payload_encoded_length);
-
-    // append to csv_buffer
+    // append IPv6 header to csv_buffer
     sprintf(csv_buffer + strlen(csv_buffer),
             "stream=IPv6Packet,version=%u,trafficClass=%u,"
             "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
-            "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=%s\n",
+            "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=",
             ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
             ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
-            ip_destination, payload_encoded);
-    send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
-    if (arguments.verbose)
-        printf("%s", csv_buffer);
+            ip_destination);
 
-    // free up ressouces
-    free(payload_encoded);
+    // encode payload in base64 and append to csv_buffer
+    const uint8_t *payload =
+        (uint8_t *)(packet + size_ethernet_header + size_ip_header);
+    const uint16_t payload_length = ipv6_payload_length(ip);
+    int csv_length = strlen(csv_buffer);
+    base64encode(payload, payload_length, csv_buffer + csv_length,
+                 4096 - csv_length);
+
+    // send csv_buffer to esper
+    send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
+    send(esper_socket, "\n", 1, 0);
+    // print to console if --verbose argument is set
+    if (arguments.verbose)
+        printf("%s\n", csv_buffer);
 }
