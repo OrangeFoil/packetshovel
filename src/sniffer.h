@@ -9,8 +9,6 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
                       const uint8_t *packet);
 void sniffer_start(char *dev);
 void dissect_ipv4(const uint32_t size_ethernet_header,
-                  const struct pcap_pkthdr *header, const uint8_t *packet,
-                  const uint16_t *vlan_id);
+                  const struct pcap_pkthdr *header, const uint8_t *packet);
 void dissect_ipv6(const uint32_t size_ethernet_header,
-                  const struct pcap_pkthdr *header, const uint8_t *packet,
-                  const uint16_t *vlan_id);
+                  const struct pcap_pkthdr *header, const uint8_t *packet);
