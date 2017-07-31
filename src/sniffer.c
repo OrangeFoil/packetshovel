@@ -110,7 +110,7 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
     base64encode(payload, payload_length, payload_encoded,
                  payload_encoded_length);
 
-    // create csv string
+    // append to csv string
     sprintf(csv_buffer + strlen(csv_buffer), "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
                         "totalLength=%hu,identification=%hu,dontFragment=%s,"
                         "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
@@ -152,10 +152,9 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
     base64encode(payload, payload_length, payload_encoded,
                  payload_encoded_length);
 
-    char *const csv_buffer =
-        malloc(sizeof(char) * (512 + payload_encoded_length));
+    // append to csv_buffer
     sprintf(
-        csv_buffer,
+        csv_buffer + strlen(csv_buffer),
         "stream=IPv6Packet,version=%u,trafficClass=%u,"
         "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
         "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=%s\n",
@@ -168,5 +167,4 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
 
     // free up ressouces
     free(payload_encoded);
-    free(csv_buffer);
 }
