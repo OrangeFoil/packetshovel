@@ -111,11 +111,12 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
                  payload_encoded_length);
 
     // append to csv string
-    sprintf(csv_buffer + strlen(csv_buffer), "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
-                        "totalLength=%hu,identification=%hu,dontFragment=%s,"
-                        "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
-                        "protocol=%hhu,headerChecksum=%hu,sourceIP=%s,"
-                        "destinationIP=%s,payload=%s\n",
+    sprintf(csv_buffer + strlen(csv_buffer),
+            "stream=IPv4Packet,version=%d,IHL=%d,DSCP=%d,ECN=%d,"
+            "totalLength=%hu,identification=%hu,dontFragment=%s,"
+            "moreFragments=%s,fragmentOffset=%d,timeToLive=%hhu,"
+            "protocol=%hhu,headerChecksum=%hu,sourceIP=%s,"
+            "destinationIP=%s,payload=%s\n",
             ipv4_version(ip), ipv4_header_length(ip), ipv4_dscp(ip),
             ipv4_ecn(ip), ipv4_total_length(ip), ipv4_identification(ip),
             ipv4_dont_fragment(ip) ? "true" : "false",
@@ -153,14 +154,13 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
                  payload_encoded_length);
 
     // append to csv_buffer
-    sprintf(
-        csv_buffer + strlen(csv_buffer),
-        "stream=IPv6Packet,version=%u,trafficClass=%u,"
-        "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
-        "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=%s\n",
-        ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
-        ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
-        ip_destination, payload_encoded);
+    sprintf(csv_buffer + strlen(csv_buffer),
+            "stream=IPv6Packet,version=%u,trafficClass=%u,"
+            "flowLabel=%u,payloadLength=%hu,nextHeader=%hhu,"
+            "hopLimit=%hhu,sourceIP=%s,destinationIP=%s,payload=%s\n",
+            ipv6_version(ip), ipv6_traffic_class(ip), ipv6_flow_label(ip),
+            ipv6_payload_length(ip), ip->next_header, ip->hop_limit, ip_source,
+            ip_destination, payload_encoded);
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
     if (arguments.verbose)
         printf("%s", csv_buffer);
