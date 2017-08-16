@@ -1,6 +1,7 @@
 #include "sniffer.h"
 #include "arguments.h"
 #include "base64encode.h"
+#include "csv_queue.h"
 #include "esper_socket.h"
 #include "ethernet_frame.h"
 #include "ipv4_packet.h"
@@ -71,7 +72,8 @@ void sniffer_callback(uint8_t *args, const struct pcap_pkthdr *header,
         ethertype = ntohs(ethernet_tagged->type);
         vlan_id = ethernet_vlan_identifier(ethernet_tagged);
     }
-    sprintf(csv_buffer, "time=%ld.%06ld,vlanID=%hu,", header->ts.tv_sec, header->ts.tv_usec, vlan_id);
+    sprintf(csv_buffer, "time=%ld.%06ld,vlanID=%hu,", header->ts.tv_sec,
+            header->ts.tv_usec, vlan_id);
 
     // analyse network layer
     if (ethertype == 0x0800) {
@@ -123,9 +125,16 @@ void dissect_ipv4(const uint32_t size_ethernet_header,
     base64encode(payload, payload_length, csv_buffer + csv_length,
                  4096 - csv_length);
 
-    // send csv_buffer to esper
+    /*// send csv_buffer to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
-    send(esper_socket, "\n", 1, 0);
+    send(esper_socket, "\n", 1, 0);*/
+
+    // enqueue csv string to be sent to Esper
+    csv_length = strlen(csv_buffer);
+    char *csv_string = malloc(csv_length + 1);
+    strncpy(csv_string, csv_buffer, csv_length);
+    csv_enqueue(csv_string, csv_length);
+
     // print to console if --verbose argument is set
     if (arguments.verbose)
         printf("%s\n", csv_buffer);
@@ -161,9 +170,16 @@ void dissect_ipv6(const uint32_t size_ethernet_header,
     base64encode(payload, payload_length, csv_buffer + csv_length,
                  4096 - csv_length);
 
-    // send csv_buffer to esper
+    /*// send csv_buffer to esper
     send(esper_socket, csv_buffer, strlen(csv_buffer), 0);
-    send(esper_socket, "\n", 1, 0);
+    send(esper_socket, "\n", 1, 0);*/
+
+    // enqueue csv string to be sent to Esper
+    csv_length = strlen(csv_buffer);
+    char *csv_string = malloc(csv_length + 1);
+    strncpy(csv_string, csv_buffer, csv_length);
+    csv_enqueue(csv_string, csv_length);
+
     // print to console if --verbose argument is set
     if (arguments.verbose)
         printf("%s\n", csv_buffer);

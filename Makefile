@@ -2,7 +2,7 @@ CC = gcc
 BIN = ./bin
 SRC = ./src
 INSTALL_PATH = /usr/local
-OBJS = $(BIN)/arguments.o $(BIN)/base64encode.o $(BIN)/esper_socket.o $(BIN)/ethernet_frame.o $(BIN)/ipv4_packet.o $(BIN)/ipv6_packet.o $(BIN)/main.o $(BIN)/sniffer.o $(BIN)/tcp_segment.o $(BIN)/udp_segment.o
+OBJS = $(BIN)/arguments.o $(BIN)/base64encode.o $(BIN)/csv_queue.o $(BIN)/esper_socket.o $(BIN)/ethernet_frame.o $(BIN)/ipv4_packet.o $(BIN)/ipv6_packet.o $(BIN)/main.o $(BIN)/sniffer.o $(BIN)/tcp_segment.o $(BIN)/udp_segment.o
 LIBS = -lpcap
 CFLAGS = -Wall -O2 -std=gnu11
 
