@@ -9,7 +9,7 @@ Packet Shovel                         {#mainpage}
 - gcc
 
 ## Compilation ##
-> make all\n
+> make all  
 > make install
 
 
@@ -32,5 +32,3 @@ Esper must be configured to accept CSV formatted events on a network socket. Pac
 - IPv6Packet
 
 The event type information that are being transmitted are the respective IPv4/IPv6 header fields, the base64 encoded payload and the VLAN ID of the underlying ethernet frame.
-
-A basic example implementation of Esper + EsperIO that is able to accept and process the aforementioned event types is in the works at the time of writing.
